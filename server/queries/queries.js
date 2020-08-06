@@ -1,81 +1,34 @@
-const db = require('./db/models/index');
-const Groups = db.groups;
-const Manufacturers = db.manufacturers;
-const Products = db.products;
-
-/*module.exports = {
-    async function connectCheck() {
-        try {
-            await db.sequelize.authenticate();
-            console.log('Connection has been established successfully.');
-        } catch (error) {
-            console.error('Unable to connect to the database:', error);
-        }
-    }
-
-    async function findProductByGroupId(groupId) {
-        const data = await Products.findAll({
-            attributes: ['prod_name', 'price'],
-            include: {
-                model: Groups,
-                attributes: ['id'],
-                where: {
-                    id: groupId
-                }
-            }
-        });
-        console.log("All groups:", JSON.stringify(data, null, 2));
-    };
-
-    async function findProductByManufId(manufId) {
-        const data = await Products.findAll({
-            attributes: ['prod_name', 'price'],
-            include: {
-                model: Manufacturers,
-                attributes: {
-                    include: ['id']
-                },
-                where: {
-                    id: manufId
-                }
-            },
-            include: {
-                model: Groups,
-                attributes:['id', 'group_title'],
-            }
-        });
-        console.log("All groups:", JSON.stringify(data, null, 2));}
-};*/
+const db = require('../db/models/index');
+const {Op} = require("sequelize");
 
 module.exports = {
-    async function connectCheck() {
+    connectCheck: async function connectCheck() {
         try {
             await db.sequelize.authenticate();
             console.log('Connection has been established successfully.');
         } catch (error) {
             console.error('Unable to connect to the database:', error);
         }
-    };
-
-    async function findProductByGroupId(groupId) {
-        const data = await Products.findAll({
+    },
+    findProductByGroupId: async function findProductByGroupId(groupId) {
+        const data = await db.products.findAll({
             attributes: ['prod_name', 'price'],
             include: {
-                model: Groups,
+                model: db.groups,
                 attributes: ['id'],
                 where: {
                     id: groupId
                 }
             }
         });
-        console.log("All groups:", JSON.stringify(data, null, 2));
-    };
+        console.log(`Products by Group ID = ${groupId}`, JSON.stringify(data, null, 2));
 
-    async function findProductByManufId(manufId) {
-        const data = await Products.findAll({
+    },
+    findProductByManufId: async function findProductByManufId(manufId) {
+        const data = await db.products.findAll({
             attributes: ['prod_name', 'price'],
             include: {
-                model: Manufacturers,
+                model: db.manufacturers,
                 attributes: {
                     include: ['id']
                 },
@@ -84,9 +37,26 @@ module.exports = {
                 }
             },
             include: {
-                model: Groups,
-                attributes:['id', 'group_title'],
+                model: db.groups,
+                attributes: ['id', 'group_title'],
             }
         });
-        console.log("All groups:", JSON.stringify(data, null, 2));}
+        console.log(`Products by Manufacrurer ID = ${manufId}`, JSON.stringify(data, null, 2));
+    },
+    findProductByPriceRange: async function findProductByPriceRange(priceMin = 0, priceMax = 10e6) {
+        if (priceMax < priceMin) return console.log('error wrong range');
+        const data = await db.products.findAll({
+            attributes: ['prod_name', 'price'],
+            where: {
+                price: {
+                    [Op.between]: [priceMin, priceMax]
+                }
+            }
+        });
+        console.log(`Products by Price between ${priceMin} and ${priceMax}`, JSON.stringify(data, null, 2));
+    },
+    createNewProduct: async function createNewProduct(prod_name, price, manuf_id, group_id) {
+        const newProd =  await db.products.create({prod_name: prod_name, price: price, manuf_id: manuf_id, group_id: group_id});
+        console.log('New product created', JSON.stringify(newProd))
+    }
 };

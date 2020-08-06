@@ -1,77 +1,39 @@
 const db = require('./db/models/index');
-const Groups = db.groups;
-const Manufacturers = db.manufacturers;
-const Products = db.products;
-const { Op } = require("sequelize");
+const {groups, manufacturers,products } = db;
+const query = require("./queries/queries");
+const express = require('express')
+const app = express()
+const port = 3000
 
-Products.belongsTo(Manufacturers, {
+
+
+products.belongsTo(manufacturers, {
     foreignKey: 'manuf_id',
     targetKey: 'id',
     onDelete: 'CASCADE',
     onUpdate: 'SET NULL'
 });
-Products.belongsTo(Groups, {
+products.belongsTo(groups, {
     foreignKey: 'group_id',
     targetKey: 'id',
     onDelete: 'CASCADE',
     onUpdate: 'SET NULL'
 });
-connectCheck();
-//findProductByGroupId(1);
-//findProductByManufId(2);
-findProductByPriceRange(500,1000)
-
-async function findProductByPriceRange(priceMin = 0,priceMax = 99999) {
-    if (priceMax<priceMin) return console.log('error wrong range');
-    const data = await Products.findAll({
-        attributes: ['prod_name', 'price'],
-        where:{
-            price: {
-                [Op.between]: [priceMin, priceMax]
-            }
-        }
-    });
-    console.log("All groups:", JSON.stringify(data, null, 2));
-}
-async function connectCheck() {
-    try {
-        await db.sequelize.authenticate();
-        console.log('Connection has been established successfully.');
-    } catch (error) {
-        console.error('Unable to connect to the database:', error);
-    }
-}
-async function findProductByGroupId(groupId) {
-    const data = await Products.findAll({
-        attributes: ['prod_name', 'price'],
-        include: {
-            model: Groups,
-            attributes: ['id'],
-            where: {
-                id: groupId
-            }
-        }
-    });
-    console.log("All groups:", JSON.stringify(data, null, 2));
-}
-async function findProductByManufId(manufId) {
-    const data = await Products.findAll({
-        attributes: ['prod_name', 'price'],
-        include: [{
-            model: Manufacturers,
-            attributes: {
-                exclude: ['manuf_email']
-            },
-            where: {
-                id: manufId
-            }
-        }, {
-            model: Groups,
-            attributes: ['group_title'],
-        }]
-    });
-    console.log("All groups:", JSON.stringify(data, null, 2));
-}
 
 
-console.log('start')
+
+//---disable any comment what you like---
+//query.connectCheck();
+//query.findProductByGroupId(1);
+//query.findProductByManufId(2);
+//query.findProductByPriceRange(500, 1000)
+//query.createNewProduct('NEW PRODUCT',1000,2,2);
+
+//---express nedopilil
+app.get('/', (req, res) => {
+    res.send('Hello World!')
+})
+
+app.listen(port, () => {
+    console.log(`Example app listening at http://localhost:${port}`)
+})
